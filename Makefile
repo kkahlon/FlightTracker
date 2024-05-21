@@ -1,5 +1,9 @@
-run:
-	echo "done"
+.SILENT:
+
+scrape:
+	echo "Beginning to scrape"
+	python3 Scraper.py
+	echo "Scraping complete"
 
 clean:
-	echo "no files set to be removed"
+	echo "No files set to be removed"

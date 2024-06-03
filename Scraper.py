@@ -5,87 +5,85 @@ from selenium.webdriver.chrome.options import Options
 
 import time
 
+# TODO: Grab origin and destination from CLA's
 origin = "SJC"
 destination = "MSN"
 
-# keep browser window open after completion
+# Keep browser window open after completion
 chrome_options = Options()
 chrome_options.add_experimental_option("detach", True)
 driver = webdriver.Chrome(options = chrome_options)
 
-def button(by, query, idx):
-    element = driver.find_elements(by, query, idx)
+# Clicks the `idx` indexed element out of the list of elements returned by the `query` of type `by`
+def button(query, idx = 0, by = By.XPATH):
+    element = driver.find_elements(by, query)[idx]
     element.click()
+    time.sleep(0.25)
     return element
 
-def button(by, query):
-    return button(by, query, 0)
+# Sends `keys` to the `idx` indexed element out of the list of elements returned by the `query` of type `by`
+def textbox(query, keys, idx = 0, by = By.XPATH):
+    element = driver.find_elements(by, query)[idx]
+    element.send_keys(keys)
+    time.sleep(0.25)
+    return element
 
 def run():
+    # Pull the webpage
     driver.get("https://www.google.com/travel/flights")
+    # Maximize test browser window for easier viewing
+    # NOTE: Should be removed when converted to headless
     driver.maximize_window()
+    # Adds 3 seconds of polling to all element searches to account for loading times
     driver.implicitly_wait(3)
 
-    time.sleep(1)
+    # gives me a second to breathe
+    time.sleep(1.5)
 
-    orgn1 = driver.find_element(By.XPATH, "//*[@aria-label='Where from?']")
-    orgn1.click()
-    driver.implicitly_wait(3)
+    # Shifts focus to the input box which corresponds to the trip origin
+    button("//*[@aria-label='Where from?']")
+    # Activates multiselect for origin options
+    button("//button[@aria-label='Origin, Select multiple airports']")
+    # Removes preselected origin options if there are any
+    remove = driver.find_elements(By.XPATH, "//div[@aria-label='Remove']")
+    if len(remove) != 0:
+        remove[0].click()
+
+    # Inputs the trip origin
+    # TODO: Modify to support multiple origins
+    orgn = textbox("//*[@aria-label='Where from? ']", origin)
+    orgn.send_keys(Keys.ENTER)
+    # Closes the origin input box popup
+    button("//button[@aria-label='Done']", 1)
+
+    # Shifts focus to the input box which corresponds to the trip destination
+    button("//input[@aria-label='Where to? ']")
+    # Activates multiselect for destination options
+    button("//button[@aria-label='Destination, Select multiple airports']")
+
+    # Inputs the trip destination
+    # TODO: Modify to support multiple destinations
+    dest = textbox("//*[@aria-label='Where to? ']", destination, 1)
+    dest.send_keys(Keys.ENTER)
+    # Closes the destination input box popup
+    button("//button[@aria-label='Done']", 1)
+
+    # Opens up the list of trip types
+    button("//*[@aria-labelledby='i6 i7']")
+    # Selects One Way as the trip type
+    # TODO: Modify to support different trip types
+    button("//li[@data-value='2']")
     
-    multi = driver.find_element(By.XPATH, "//button[@aria-label='Origin, Select multiple airports']")
-    multi.click()
-    driver.implicitly_wait(3)
-
-    remove = driver.find_elements(By.XPATH, "//div[@aria-label='Remove']")[0]
-    remove.click()
-
-    orgn2 = driver.find_element(By.XPATH, "//*[@aria-label='Where from? ']")
-    orgn2.send_keys(origin)
-    orgn2.send_keys(Keys.ENTER)
-    driver.implicitly_wait(3)
-
-    done = driver.find_elements(By.XPATH, "//button[@aria-label='Done']")[1]
-    done.click()
-    driver.implicitly_wait(3)
-
-    dest1 = driver.find_element(By.XPATH, "//input[@aria-label='Where to? ']")
-    dest1.click()
-    driver.implicitly_wait(3)
-
-    multi = driver.find_element(By.XPATH, "//button[@aria-label='Destination, Select multiple airports']")
-    multi.click()
-    driver.implicitly_wait(3)
-
-    dest2 = driver.find_elements(By.XPATH, "//*[@aria-label='Where to? ']")[1]
-    dest2.send_keys(destination)
-    dest2.send_keys(Keys.ENTER)
-    driver.implicitly_wait(3)
-
-    done = driver.find_elements(By.XPATH, "//button[@aria-label='Done']")[1]
-    done.click()
-    driver.implicitly_wait(3)
-
-    type = driver.find_element(By.XPATH, "//*[@aria-labelledby='i6 i7']")
-    type.click()
-    driver.implicitly_wait(3)
-
-    one_way = driver.find_element(By.XPATH, "//li[@data-value='2']")
-    one_way.click()
+    # Shift focus to the departure input box
+    departure = button("//input[@aria-label='Departure']")
+    # Inputs the departure date
+    # TODO: Account for round trip flights as well
+    departure.send_keys("11/12/2024")
+    # Close departure popup
+    button("//button[@aria-label='Done. ']")
     
-    # dest = driver.find_elements(By.XPATH, "//input[@aria-label='Where to? ']")[0]
-    # dest.click()
-    # dest.send_keys(destination)
-    # driver.implicitly_wait(3)
-
-    # dest = driver.find_element(By.XPATH, "//li[@data-code='"+destination+"']")
-    # dest.click()
-    # driver.implicitly_wait(3)
-
-    # departure = driver.find_element(By.XPATH, "//input[@aria-label='Departure']")
-    # departure.click()
-    # time.sleep(1)
-    # departure.send_keys("11/12/2024")
-    # driver.implicitly_wait(3)
+    # Advance to the query results page
+    button("//button[@aria-label='Search']")
     
 if __name__ == "__main__":
     run()

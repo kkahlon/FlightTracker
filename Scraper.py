@@ -28,7 +28,7 @@ def textbox(query, keys, idx = 0, by = By.XPATH):
     time.sleep(0.25)
     return element
 
-def run():
+def navigate():
     # Pull the webpage
     driver.get("https://www.google.com/travel/flights")
     # Maximize test browser window for easier viewing
@@ -84,6 +84,26 @@ def run():
     
     # Advance to the query results page
     button("//button[@aria-label='Search']")
+
+def filters():
+    # Change the number of stops to 1 or fewer
+    # TODO: Account for other numbers of stops
+    button("//button[@aria-label='Stops, Not selected']")
+    button("//input[@aria-label='1 stop or fewer']")
+
+    # Filter to only American and United airlines
+    # TODO: Support airline filtering by input 
+    button("//button[@aria-label='Airlines, Not selected']")
+    # Deselect all
+    button("//button[@aria-label='Select all airlines']")
+    button("//input[@value='American']")
+    button("//input[@value='United']")
+    # Close the popup
+    button("//button[@aria-label='Close dialog']")
+
+def run():
+    navigate()
+    filters()
     
 if __name__ == "__main__":
     run()

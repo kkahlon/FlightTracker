@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
 import time
+import pandas as pd
 
 # TODO: Grab origin and destination from CLA's
 origin = "SJC"
@@ -28,6 +29,7 @@ def textbox(query, keys, idx = 0, by = By.XPATH):
     time.sleep(0.25)
     return element
 
+# Get to the flights page for the trip provided
 def navigate():
     # Pull the webpage
     driver.get("https://www.google.com/travel/flights")
@@ -85,6 +87,7 @@ def navigate():
     # Advance to the query results page
     button("//button[@aria-label='Search']")
 
+# Apply filters to the given flights
 def filters():
     # Change the number of stops to 1 or fewer
     # TODO: Account for other numbers of stops
@@ -101,9 +104,41 @@ def filters():
     # Close the popup
     button("//button[@aria-label='Close dialog']")
 
+    # Give the page a second to catch up
+    time.sleep(1.5)
+
+# Parse the html table of best flights to extract the information for said flights
+def get_data():
+    # Find best flights table
+    table_element = driver.find_elements(By.XPATH, "//ul")[4]
+    
+    # Get list of elements containing flight information
+    flight_elements = table_element.find_elements(By.XPATH, "./li")
+    
+    # Extract flight info from html elements
+    flight_info = []
+    for flight_element in flight_elements:
+        tokens = flight_element.text.split("\n")
+
+        # Account for differing html element formats resulting from nonstop flights
+        if tokens[6] == "Nonstop":
+            flight_info.append([tokens[3], tokens[5], tokens[0], tokens[2], tokens[4], tokens[6], None, tokens[-1]])
+        else:
+            flight_info.append([tokens[3], tokens[5], tokens[0], tokens[2], tokens[4], tokens[6], tokens[7], tokens[-1]])
+    
+    # Convert the list of flights into a dataframe
+    colNames = ["Airline", "Trip", "Departure", "Arrival", "Length", "NumStops", "Layovers", "Price"]
+    flights = pd.DataFrame(flight_info, columns=colNames)
+
+    return flights
+
+# Execute everything
 def run():
     navigate()
     filters()
+    flights = get_data()
+
+    print(flights)
     
 if __name__ == "__main__":
     run()
